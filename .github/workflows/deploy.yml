@@ -1,0 +1,94 @@
+name: "Terraform Deploy"
+
+on:
+  # Manual trigger with environment dropdown
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Select environment to deploy"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+      action:
+        description: "Terraform action"
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+        default: plan
+
+  # Auto deploy on push to branch
+  push:
+    branches:
+      - dev      # push to dev branch → auto deploy dev
+      - main     # push to main branch → auto deploy prod
+    paths:
+      - "terraform/**"
+
+permissions:
+  id-token: write   # For OIDC auth with Azure
+  contents: read
+  pull-requests: write
+
+jobs:
+  # ── Determine environment from trigger ──────────────────────────────────
+  set-environment:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      action: ${{ steps.set-env.outputs.action }}
+    steps:
+      - name: Set environment
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+            echo "action=${{ github.event.inputs.action }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+            echo "action=apply" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "action=apply" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Print environment
+        run: |
+          echo "🚀 Environment : ${{ steps.set-env.outputs.environment }}"
+          echo "⚡ Action      : ${{ steps.set-env.outputs.action }}"
+
+  # ── Terraform Dev ────────────────────────────────────────────────────────
+  terraform-dev:
+    needs: set-environment
+    if: needs.set-environment.outputs.environment == 'dev'
+    uses: ./.github/workflows/terraform-deploy.yml
+    with:
+      environment: dev
+      action: ${{ needs.set-environment.outputs.action }}
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.DEV_AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.DEV_AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.DEV_AZURE_SUBSCRIPTION_ID }}
+      TF_BACKEND_RESOURCE_GROUP: ${{ secrets.DEV_TF_BACKEND_RESOURCE_GROUP }}
+      TF_BACKEND_STORAGE_ACCOUNT: ${{ secrets.DEV_TF_BACKEND_STORAGE_ACCOUNT }}
+      TF_BACKEND_CONTAINER: ${{ secrets.DEV_TF_BACKEND_CONTAINER }}
+
+  # ── Terraform Prod ───────────────────────────────────────────────────────
+  terraform-prod:
+    needs: set-environment
+    if: needs.set-environment.outputs.environment == 'prod'
+    uses: ./.github/workflows/terraform-deploy.yml
+    with:
+      environment: prod
+      action: ${{ needs.set-environment.outputs.action }}
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.PROD_AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.PROD_AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.PROD_AZURE_SUBSCRIPTION_ID }}
+      TF_BACKEND_RESOURCE_GROUP: ${{ secrets.PROD_TF_BACKEND_RESOURCE_GROUP }}
+      TF_BACKEND_STORAGE_ACCOUNT: ${{ secrets.PROD_TF_BACKEND_STORAGE_ACCOUNT }}
+      TF_BACKEND_CONTAINER: ${{ secrets.PROD_TF_BACKEND_CONTAINER }}
