@@ -1,5 +1,5 @@
 environment            = "dev"
-location               = "East US"
+location               = "West US 2"
 resource_group_name    = "rg-appgw-dev"
 app_gateway_name       = "appgw-dev"
 container_app_name     = "containerapp-dev"
