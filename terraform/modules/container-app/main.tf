@@ -45,7 +45,7 @@ resource "azurerm_container_app" "main" {
   }
 
   ingress {
-    external_enabled = false   # Only accessible via App Gateway
+    external_enabled = false # Only accessible via App Gateway
     target_port      = 80
     traffic_weight {
       latest_revision = true

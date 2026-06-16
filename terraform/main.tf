@@ -70,11 +70,11 @@ module "container_app" {
 module "app_gateway" {
   source = "./modules/app-gateway"
 
-  resource_group_name  = azurerm_resource_group.main.name
-  location             = azurerm_resource_group.main.location
-  app_gateway_name     = var.app_gateway_name
-  environment          = var.environment
-  subnet_id            = azurerm_subnet.appgw.id
-  backend_fqdn         = module.container_app.container_app_fqdn
-  tags                 = var.tags
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  app_gateway_name    = var.app_gateway_name
+  environment         = var.environment
+  subnet_id           = azurerm_subnet.appgw.id
+  backend_fqdn        = module.container_app.container_app_fqdn
+  tags                = var.tags
 }

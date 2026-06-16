@@ -1,7 +1,7 @@
 locals {
-  sku_name     = var.environment == "prod" ? "WAF_v2" : "Standard_v2"
-  sku_tier     = var.environment == "prod" ? "WAF_v2" : "Standard_v2"
-  capacity     = var.environment == "prod" ? 2 : 1
+  sku_name = var.environment == "prod" ? "WAF_v2" : "Standard_v2"
+  sku_tier = var.environment == "prod" ? "WAF_v2" : "Standard_v2"
+  capacity = var.environment == "prod" ? 2 : 1
 }
 
 # Public IP for App Gateway frontend
@@ -72,7 +72,7 @@ resource "azurerm_application_gateway" "main" {
     port                                = 80
     protocol                            = "Http"
     request_timeout                     = 30
-    pick_host_name_from_backend_address = true   # Required for Container Apps
+    pick_host_name_from_backend_address = true # Required for Container Apps
   }
 
   # ── HTTP Listener ────────────────────────────────────────────────────────
