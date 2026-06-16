@@ -25,6 +25,10 @@ resource "azurerm_application_gateway" "main" {
     tier     = local.sku_tier
     capacity = local.capacity
   }
+  ssl_policy {
+    policy_type = "Predefined"
+    policy_name = "AppGwSslPolicy20220101"
+  }
 
   # WAF only for prod
   dynamic "waf_configuration" {
